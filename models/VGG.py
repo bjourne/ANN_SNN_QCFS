@@ -1,5 +1,5 @@
 import torch.nn as nn
-from Models.layer import *
+from models.layer import *
 
 cfg = {
     'VGG11': [

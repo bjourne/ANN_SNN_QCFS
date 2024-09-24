@@ -5,7 +5,7 @@
 """
 from matplotlib.pyplot import xlim
 import torch.nn as nn
-from Models.layer import *
+from models.layer import *
 
 class BasicBlock(nn.Module):
     """Basic Block for resnet 18 and resnet 34
@@ -72,7 +72,7 @@ class ResNet(nn.Module):
             layers.append(block(self.in_channels, out_channels, stride))
             self.in_channels = out_channels * block.expansion
         return nn.Sequential(*layers)
-    
+
     def set_T(self, T):
         self.T = T
         for module in self.modules():
@@ -163,7 +163,7 @@ class ResNet4Cifar(nn.Module):
 
 def resnet18(num_classes=10):
     return ResNet(BasicBlock, [2, 2, 2, 2], num_classes=num_classes)
-    
+
 def resnet20(num_classes=10):
     return ResNet4Cifar(BasicBlock, [3, 3, 3], num_classes=num_classes)
 
