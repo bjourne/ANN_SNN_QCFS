@@ -3,7 +3,7 @@ import random
 import numpy as np
 import torch
 
-# code from https://github.com/uoguelph-mlrg/Cutout/blob/master/util/cutout.py 
+# code from https://github.com/uoguelph-mlrg/Cutout/blob/master/util/cutout.py
 # Improved Regularization of Convolutional Neural Networks with Cutout.
 class Cutout(object):
     """Randomly mask out one or more patches from an image.
@@ -62,7 +62,7 @@ class SubPolicy(object):
             "translateY": np.linspace(0, 150 / 331, 10),
             "rotate": np.linspace(0, 30, 10),
             "color": np.linspace(0.0, 0.9, 10),
-            "posterize": np.round(np.linspace(8, 4, 10), 0).astype(np.int),
+            "posterize": np.round(np.linspace(8, 4, 10), 0).astype(int),
             "solarize": np.linspace(256, 0, 10),
             "contrast": np.linspace(0.0, 0.9, 10),
             "sharpness": np.linspace(0.0, 0.9, 10),

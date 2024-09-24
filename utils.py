@@ -3,16 +3,18 @@ import torch.nn as nn
 import torch.nn.parallel
 import torch.optim
 from tqdm import tqdm
-import torch.nn.functional as F
 import numpy as np
 import random
-import os
 import logging
+
+from itertools import islice
 from models import IF
+from os import environ
+from torch.nn.functional import cross_entropy
 
 def seed_all(seed=1029):
     random.seed(seed)
-    os.environ['PYTHONHASHSEED'] = str(seed)
+    environ['PYTHONHASHSEED'] = str(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)
@@ -35,42 +37,52 @@ def get_logger(filename, verbosity=1, name=None):
     logger.addHandler(sh)
     return logger
 
-def train(model, device, train_loader, criterion, optimizer, T):
-    running_loss = 0
-    model.train()
-    M = len(train_loader)
-    total = 0
-    correct = 0
-    for i, (images, labels) in enumerate((train_loader)):
-        optimizer.zero_grad()
-        labels = labels.to(device)
-        images = images.to(device)
-        if T > 0:
-            outputs = model(images).mean(0)
-        else:
-            outputs = model(images)
-        loss = criterion(outputs, labels)
-        running_loss += loss.item()
-        loss.mean().backward()
-        optimizer.step()
-        total += float(labels.size(0))
-        _, predicted = outputs.cpu().max(1)
-        correct += float(predicted.eq(labels.cpu()).sum().item())
-    return running_loss, 100 * correct / total
+def train(net, device, loader, opt, epoch, n_epochs):
+    phase = "train" if net.training else "test"
+    args = phase, epoch, n_epochs
+    print("== %s %3d/%3d ==" % args)
+
+    tot_loss = 0
+    n_tot_el = 0
+    n_tot_corr = 0
+    n_batches = len(loader)
+    #n_batches = 3
+    for i, (x, y) in enumerate(islice(loader, n_batches)):
+        if net.training:
+            opt.zero_grad()
+        y = y.to(device)
+        x = x.to(device)
+        yh = net(x)
+
+        loss = cross_entropy(yh, y)
+        if net.training:
+            loss.backward()
+            opt.step()
+        loss = loss.item()
+
+        n_el = y.size(0)
+        n_corr = (yh.argmax(1) == y).sum().item()
+
+        n_tot_el += n_el
+        n_tot_corr += n_corr
+        tot_loss += loss
+        acc = n_corr / n_el
+
+        print('%4d/%4d, loss/acc: %.4f/%.2f' % (i, n_batches, loss, acc))
+    return tot_loss / n_batches, n_tot_corr / n_tot_el
 
 
-def val(model, test_loader, device, T):
+def val(net, loader, device, T):
     correct = 0
     total = 0
-    model.eval()
     with torch.no_grad():
-        for batch_idx, (inputs, targets) in enumerate((test_loader)):
+        for batch_idx, (inputs, targets) in enumerate(loader):
             inputs = inputs.to(device)
             if T > 0:
-                outputs = model(inputs).mean(0)
+                yh = net(inputs).mean(0)
             else:
-                outputs = model(inputs)
-            _, predicted = outputs.cpu().max(1)
+                yh = net(inputs)
+            _, predicted = yh.cpu().max(1)
             total += float(targets.size(0))
             correct += float(predicted.eq(targets).sum().item())
         final_acc = 100 * correct / total
