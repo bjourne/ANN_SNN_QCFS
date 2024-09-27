@@ -171,9 +171,6 @@ class ImageNetPolicy(object):
         policy_idx = random.randint(0, len(self.policies) - 1)
         return self.policies[policy_idx](img)
 
-    def __repr__(self):
-        return "AutoAugment ImageNet Policy"
-
 class CIFAR10Policy(object):
     """ Randomly choose one of the best 25 Sub-policies on CIFAR10.
 

@@ -76,14 +76,17 @@ def val(net, loader, device, T):
     correct = 0
     total = 0
     with torch.no_grad():
-        for batch_idx, (inputs, targets) in enumerate(loader):
-            inputs = inputs.to(device)
+        n = len(loader)
+        for i, (x, y) in enumerate(loader):
+            print('loaded x', x.shape, y.shape)
+            x = x.to(device)
             if T > 0:
-                yh = net(inputs).mean(0)
+                yh = net(x).mean(0)
             else:
-                yh = net(inputs)
+                yh = net(x)
             _, predicted = yh.cpu().max(1)
-            total += float(targets.size(0))
-            correct += float(predicted.eq(targets).sum().item())
+            total += float(y.size(0))
+            correct += float(predicted.eq(y).sum().item())
+            print("%4d/%4d" % (i, n))
         final_acc = 100 * correct / total
     return final_acc

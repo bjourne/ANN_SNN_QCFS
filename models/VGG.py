@@ -34,7 +34,7 @@ cfg = {
 
 
 class VGG(nn.Module):
-    def __init__(self, vgg_name, num_classes, dropout):
+    def __init__(self, vgg_name, n_classes, dropout):
         super(VGG, self).__init__()
         self.init_channels = 3
         self.T = 0
@@ -46,7 +46,7 @@ class VGG(nn.Module):
         self.layer3 = self._make_layers(cfg[vgg_name][2], dropout)
         self.layer4 = self._make_layers(cfg[vgg_name][3], dropout)
         self.layer5 = self._make_layers(cfg[vgg_name][4], dropout)
-        if num_classes == 1000:
+        if n_classes == 1000:
             self.classifier = nn.Sequential(
                 nn.Flatten(),
                 nn.Linear(512*7*7, 4096),
@@ -55,7 +55,7 @@ class VGG(nn.Module):
                 nn.Linear(4096, 4096),
                 IF(),
                 nn.Dropout(dropout),
-                nn.Linear(4096, num_classes)
+                nn.Linear(4096, n_classes)
             )
         else:
             self.classifier = nn.Sequential(
@@ -66,7 +66,7 @@ class VGG(nn.Module):
                 nn.Linear(4096, 4096),
                 IF(),
                 nn.Dropout(dropout),
-                nn.Linear(4096, num_classes)
+                nn.Linear(4096, n_classes)
             )
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
@@ -106,7 +106,9 @@ class VGG(nn.Module):
     def forward(self, x):
         if self.T > 0:
             x = add_dimention(x, self.T)
+            print('new dim', x.shape)
             x = self.merge(x)
+            print('after merge', x.shape)
         out = self.layer1(x)
         out = self.layer2(out)
         out = self.layer3(out)
@@ -118,7 +120,7 @@ class VGG(nn.Module):
         return out
 
 class VGG_woBN(nn.Module):
-    def __init__(self, vgg_name, num_classes, dropout):
+    def __init__(self, vgg_name, n_classes, dropout):
         super(VGG_woBN, self).__init__()
         self.init_channels = 3
         self.T = 0
@@ -129,7 +131,7 @@ class VGG_woBN(nn.Module):
         self.layer3 = self._make_layers(cfg[vgg_name][2], dropout)
         self.layer4 = self._make_layers(cfg[vgg_name][3], dropout)
         self.layer5 = self._make_layers(cfg[vgg_name][4], dropout)
-        if num_classes == 1000:
+        if n_classes == 1000:
             self.classifier = nn.Sequential(
                 nn.Flatten(),
                 nn.Linear(512*7*7, 4096),
@@ -138,7 +140,7 @@ class VGG_woBN(nn.Module):
                 nn.Linear(4096, 4096),
                 IF(),
                 nn.Dropout(dropout),
-                nn.Linear(4096, num_classes)
+                nn.Linear(4096, n_classes)
             )
         else:
             self.classifier = nn.Sequential(
@@ -149,7 +151,7 @@ class VGG_woBN(nn.Module):
                 nn.Linear(4096, 4096),
                 IF(),
                 nn.Dropout(dropout),
-                nn.Linear(4096, num_classes)
+                nn.Linear(4096, n_classes)
             )
 
         for m in self.modules():
@@ -200,11 +202,11 @@ class VGG_woBN(nn.Module):
             out = self.expand(out)
         return out
 
-def vgg16(num_classes, dropout=0.):
-    return VGG('VGG16', num_classes, dropout)
+def vgg16(n_classes, dropout=0.):
+    return VGG('VGG16', n_classes, dropout)
 
-def vgg16_wobn(num_classes, dropout=0.1):
-    return VGG_woBN('VGG16', num_classes, dropout)
+def vgg16_wobn(n_classes, dropout=0.1):
+    return VGG_woBN('VGG16', n_classes, dropout)
 
-def vgg19(num_classes, dropout):
-    return VGG('VGG19', num_classes, dropout)
+def vgg19(n_classes, dropout):
+    return VGG('VGG19', n_classes, dropout)

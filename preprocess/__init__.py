@@ -1,12 +1,10 @@
 from .getdataloader import *
 
-def datapool(DATANAME, batchsize):
-    if DATANAME.lower() == 'cifar10':
+def datapool(name, batchsize):
+    if name == 'cifar10':
         return GetCifar10(batchsize)
-    elif DATANAME.lower() == 'cifar100':
+    elif name == 'cifar100':
         return GetCifar100(batchsize)
-    elif DATANAME.lower() == 'imagenet':
+    elif name == 'imagenet':
         return GetImageNet(batchsize)
-    else:
-        print("still not support this model")
-        exit(0)
+    assert False
