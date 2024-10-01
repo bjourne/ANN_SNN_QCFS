@@ -46,7 +46,6 @@ def train(net, device, loader, opt, epoch, n_epochs):
     n_tot_el = 0
     n_tot_corr = 0
     n_batches = len(loader)
-    #n_batches = 3
     for i, (x, y) in enumerate(islice(loader, n_batches)):
         if net.training:
             opt.zero_grad()
@@ -78,15 +77,18 @@ def val(net, loader, device, T):
     with torch.no_grad():
         n = len(loader)
         for i, (x, y) in enumerate(loader):
-            print('loaded x', x.shape, y.shape)
             x = x.to(device)
             if T > 0:
                 yh = net(x).mean(0)
             else:
                 yh = net(x)
             _, predicted = yh.cpu().max(1)
-            total += float(y.size(0))
-            correct += float(predicted.eq(y).sum().item())
-            print("%4d/%4d" % (i, n))
+
+            n_batch = y.size(0)
+            n_corr = predicted.eq(y).sum().item()
+
+            total += n_batch
+            correct += n_corr
+            print("%4d/%4d acc %5.3f" % (i, n, n_corr / n_batch))
         final_acc = 100 * correct / total
     return final_acc

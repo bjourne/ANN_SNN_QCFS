@@ -1,13 +1,11 @@
-import argparse
-import os
 import torch
-import warnings
 
 from argparse import ArgumentParser
 from models import modelpool
 from os import environ
 from pathlib import Path
 from preprocess import datapool
+from torchinfo import summary
 from utils import train, val, seed_all, get_logger
 from models.layer import *
 
@@ -59,6 +57,7 @@ def main():
 
     _, l_te = datapool(args.dataset, args.batch_size)
     net = modelpool(args.model, args.dataset)
+    summary(net)
     state_dict = torch.load(args.weights_file, map_location=torch.device('cpu'))
 
     net.load_state_dict(state_dict)

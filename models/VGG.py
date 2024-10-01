@@ -106,9 +106,7 @@ class VGG(nn.Module):
     def forward(self, x):
         if self.T > 0:
             x = add_dimention(x, self.T)
-            print('new dim', x.shape)
             x = self.merge(x)
-            print('after merge', x.shape)
         out = self.layer1(x)
         out = self.layer2(out)
         out = self.layer3(out)

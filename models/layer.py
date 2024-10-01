@@ -66,6 +66,7 @@ class IF(nn.Module):
         if self.T > 0:
             thre = self.thresh.data
             x = self.expand(x)
+
             mem = 0.5 * thre
             spike_pot = []
             for t in range(self.T):
@@ -78,7 +79,7 @@ class IF(nn.Module):
         else:
             x = x / self.thresh
             x = torch.clamp(x, 0, 1)
-            x = myfloor(x*self.L+0.5)/self.L
+            x = myfloor(x * self.L+0.5)/self.L
             x = x * self.thresh
         return x
 
