@@ -23,7 +23,7 @@ def main():
         help = 'number of data loading workers'
     )
     parser.add_argument(
-    '-b','--batch_size',default=200,
+        '-b','--batch_size',default=200,
         type=int,metavar='N',help='mini-batch size'
     )
     parser.add_argument(
@@ -56,16 +56,18 @@ def main():
     dev = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     _, l_te = datapool(args.dataset, args.batch_size)
-    net = modelpool(args.model, args.dataset)
-    summary(net)
-    state_dict = torch.load(args.weights_file, map_location=torch.device('cpu'))
 
+    net = modelpool(args.model, args.dataset)
+    state_dict = torch.load(
+        args.weights_file,
+        weights_only = True,
+        map_location='cpu'
+    )
     net.load_state_dict(state_dict)
 
     net = net.to(dev)
     net.set_T(args.time)
     net.set_L(8)
-
     acc = val(net, l_te, dev, args.time)
     print(acc)
 
