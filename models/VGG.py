@@ -38,9 +38,6 @@ class VGG(nn.Module):
         super(VGG, self).__init__()
         self.init_channels = 3
         self.T = 0
-        self.merge = MergeTemporalDim(0)
-        self.expand = ExpandTemporalDim(0)
-        self.loss = 0
         self.layer1 = self._make_layers(cfg[vgg_name][0], dropout)
         self.layer2 = self._make_layers(cfg[vgg_name][1], dropout)
         self.layer3 = self._make_layers(cfg[vgg_name][2], dropout)
@@ -106,16 +103,18 @@ class VGG(nn.Module):
     def forward(self, x):
         if self.T > 0:
             x = add_dimention(x, self.T)
-            x = self.merge(x)
-        out = self.layer1(x)
-        out = self.layer2(out)
-        out = self.layer3(out)
-        out = self.layer4(out)
-        out = self.layer5(out)
-        out = self.classifier(out)
+            x = x.flatten(0, 1).contiguous()
+        x = self.layer1(x)
+        x = self.layer2(x)
+        x = self.layer3(x)
+        x = self.layer4(x)
+        x = self.layer5(x)
+        x = self.classifier(x)
         if self.T > 0:
-            out = self.expand(out)
-        return out
+            y_shape = [self.T, int(x.shape[0]/self.T)]
+            y_shape.extend(x.shape[1:])
+            x = x.view(y_shape)
+        return x
 
 class VGG_woBN(nn.Module):
     def __init__(self, vgg_name, n_classes, dropout):

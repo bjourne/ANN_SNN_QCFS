@@ -38,16 +38,16 @@ class IF(Module):
     def __init__(self, T=0, L=8, thresh=8.0):
         super(IF, self).__init__()
         self.thresh = Parameter(torch.tensor([thresh]), requires_grad=True)
-        self.expand = ExpandTemporalDim(T)
-        self.merge = MergeTemporalDim(T)
         self.L = L
         self.T = T
-        self.loss = 0
 
     def forward(self, x):
         if self.T > 0:
+            # Expansion
+            y_shape = [self.T, int(x.shape[0]/self.T)]
+            y_shape.extend(x.shape[1:])
+            x = x.view(y_shape)
             thre = self.thresh.data
-            x = self.expand(x)
 
             mem = 0.5 * thre
             spike_pot = []
@@ -57,7 +57,9 @@ class IF(Module):
                 mem = mem - spike
                 spike_pot.append(spike)
             x = torch.stack(spike_pot, dim=0)
-            x = self.merge(x)
+
+            # Contraction
+            x = x.flatten(0, 1).contiguous()
         else:
             x = x / self.thresh
             x = torch.clamp(x, 0, 1)
