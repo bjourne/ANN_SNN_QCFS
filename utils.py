@@ -74,6 +74,7 @@ def train(net, device, loader, opt, epoch, n_epochs):
 def val(net, loader, device, T):
     correct = 0
     total = 0
+    net.eval()
     with torch.no_grad():
         n = len(loader)
         for i, (x, y) in enumerate(loader):
