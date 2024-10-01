@@ -5,24 +5,6 @@ from torch.nn import Module, Parameter
 
 import torch
 
-class MergeTemporalDim(Module):
-    def __init__(self, T):
-        super().__init__()
-        self.T = T
-
-    def forward(self, x_seq):
-        return x_seq.flatten(0, 1).contiguous()
-
-class ExpandTemporalDim(Module):
-    def __init__(self, T):
-        super().__init__()
-        self.T = T
-
-    def forward(self, x_seq):
-        y_shape = [self.T, int(x_seq.shape[0]/self.T)]
-        y_shape.extend(x_seq.shape[1:])
-        return x_seq.view(y_shape)
-
 class GradFloor(Function):
     @staticmethod
     def forward(ctx, input):

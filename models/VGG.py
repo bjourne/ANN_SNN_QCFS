@@ -1,4 +1,6 @@
 import torch.nn as nn
+
+from torch.nn import *
 from models.layer import *
 
 cfg = {
@@ -33,7 +35,7 @@ cfg = {
 }
 
 
-class VGG(nn.Module):
+class VGG(Module):
     def __init__(self, vgg_name, n_classes, dropout):
         super(VGG, self).__init__()
         self.init_channels = 3
@@ -45,52 +47,52 @@ class VGG(nn.Module):
         self.layer5 = self._make_layers(cfg[vgg_name][4], dropout)
         if n_classes == 1000:
             self.classifier = nn.Sequential(
-                nn.Flatten(),
-                nn.Linear(512*7*7, 4096),
+                Flatten(),
+                Linear(512*7*7, 4096),
                 IF(),
-                nn.Dropout(dropout),
-                nn.Linear(4096, 4096),
+                Dropout(dropout),
+                Linear(4096, 4096),
                 IF(),
-                nn.Dropout(dropout),
-                nn.Linear(4096, n_classes)
+                Dropout(dropout),
+                Linear(4096, n_classes)
             )
         else:
             self.classifier = nn.Sequential(
-                nn.Flatten(),
-                nn.Linear(512, 4096),
+                Flatten(),
+                Linear(512, 4096),
                 IF(),
-                nn.Dropout(dropout),
-                nn.Linear(4096, 4096),
+                Dropout(dropout),
+                Linear(4096, 4096),
                 IF(),
-                nn.Dropout(dropout),
-                nn.Linear(4096, n_classes)
+                Dropout(dropout),
+                Linear(4096, n_classes)
             )
         for m in self.modules():
-            if isinstance(m, nn.Conv2d):
+            if isinstance(m, Conv2d):
                 nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
-            elif isinstance(m, nn.BatchNorm2d):
+            elif isinstance(m, BatchNorm2d):
                 nn.init.constant_(m.weight, val=1)
                 nn.init.zeros_(m.bias)
-            elif isinstance(m, nn.Linear):
+            elif isinstance(m, Linear):
                 nn.init.zeros_(m.bias)
 
     def _make_layers(self, cfg, dropout):
         layers = []
         for x in cfg:
             if x == 'M':
-                layers.append(nn.AvgPool2d(kernel_size=2, stride=2))
+                layers.append(AvgPool2d(kernel_size=2, stride=2))
             else:
-                layers.append(nn.Conv2d(self.init_channels, x, kernel_size=3, padding=1))
-                layers.append(nn.BatchNorm2d(x))
+                layers.append(Conv2d(self.init_channels, x, kernel_size=3, padding=1))
+                layers.append(BatchNorm2d(x))
                 layers.append(IF())
-                layers.append(nn.Dropout(dropout))
+                layers.append(Dropout(dropout))
                 self.init_channels = x
         return nn.Sequential(*layers)
 
     def set_T(self, T):
         self.T = T
         for module in self.modules():
-            if isinstance(module, (IF, ExpandTemporalDim)):
+            if isinstance(module, IF):
                 module.T = T
         return
 
@@ -102,7 +104,8 @@ class VGG(nn.Module):
 
     def forward(self, x):
         if self.T > 0:
-            x = add_dimention(x, self.T)
+            x.unsqueeze_(1)
+            x = x.repeat(self.T, 1, 1, 1, 1)
             x = x.flatten(0, 1).contiguous()
         x = self.layer1(x)
         x = self.layer2(x)
