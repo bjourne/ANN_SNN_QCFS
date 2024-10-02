@@ -2,7 +2,7 @@ from .ResNet import *
 from .VGG import *
 from .layer import *
 
-def modelpool(MODELNAME, DATANAME):
+def modelpool(MODELNAME, DATANAME, T, L):
     if 'imagenet' in DATANAME.lower():
         n_classes = 1000
     elif '100' in DATANAME.lower():
@@ -10,7 +10,7 @@ def modelpool(MODELNAME, DATANAME):
     else:
         n_classes = 10
     if MODELNAME.lower() == 'vgg16':
-        return vgg16(n_classes=n_classes)
+        return vgg16(n_classes, T, L)
     elif MODELNAME.lower() == 'vgg16_wobn':
         return vgg16_wobn(n_classes=n_classes)
     elif MODELNAME.lower() == 'resnet18':

@@ -1,6 +1,7 @@
 import torch.nn as nn
 
 from torch.nn import *
+from torch.nn.init import constant_, kaiming_normal_, zeros_
 from models.layer import *
 
 cfg = {
@@ -36,47 +37,47 @@ cfg = {
 
 
 class VGG(Module):
-    def __init__(self, vgg_name, n_classes, dropout):
+    def __init__(self, vgg_name, n_classes, T, L):
         super(VGG, self).__init__()
         self.init_channels = 3
-        self.T = 0
-        self.layer1 = self._make_layers(cfg[vgg_name][0], dropout)
-        self.layer2 = self._make_layers(cfg[vgg_name][1], dropout)
-        self.layer3 = self._make_layers(cfg[vgg_name][2], dropout)
-        self.layer4 = self._make_layers(cfg[vgg_name][3], dropout)
-        self.layer5 = self._make_layers(cfg[vgg_name][4], dropout)
+        self.T = T
+        self.layer1 = self._make_layers(cfg[vgg_name][0], T, L)
+        self.layer2 = self._make_layers(cfg[vgg_name][1], T, L)
+        self.layer3 = self._make_layers(cfg[vgg_name][2], T, L)
+        self.layer4 = self._make_layers(cfg[vgg_name][3], T, L)
+        self.layer5 = self._make_layers(cfg[vgg_name][4], T, L)
         if n_classes == 1000:
             self.classifier = nn.Sequential(
                 Flatten(),
                 Linear(512*7*7, 4096),
-                IF(),
-                Dropout(dropout),
+                IF(T, L),
+                Dropout(0.0),
                 Linear(4096, 4096),
-                IF(),
-                Dropout(dropout),
+                IF(T, L),
+                Dropout(0.0),
                 Linear(4096, n_classes)
             )
         else:
             self.classifier = nn.Sequential(
                 Flatten(),
                 Linear(512, 4096),
-                IF(),
-                Dropout(dropout),
+                IF(T, L),
+                Dropout(0.0),
                 Linear(4096, 4096),
-                IF(),
-                Dropout(dropout),
+                IF(T, L),
+                Dropout(0.0),
                 Linear(4096, n_classes)
             )
         for m in self.modules():
             if isinstance(m, Conv2d):
-                nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+                kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
             elif isinstance(m, BatchNorm2d):
-                nn.init.constant_(m.weight, val=1)
-                nn.init.zeros_(m.bias)
+                constant_(m.weight, val=1)
+                zeros_(m.bias)
             elif isinstance(m, Linear):
-                nn.init.zeros_(m.bias)
+                zeros_(m.bias)
 
-    def _make_layers(self, cfg, dropout):
+    def _make_layers(self, cfg, T, L):
         layers = []
         for x in cfg:
             if x == 'M':
@@ -84,26 +85,14 @@ class VGG(Module):
             else:
                 layers.append(Conv2d(self.init_channels, x, kernel_size=3, padding=1))
                 layers.append(BatchNorm2d(x))
-                layers.append(IF())
-                layers.append(Dropout(dropout))
+                layers.append(IF(T, L))
+                layers.append(Dropout(0.0))
                 self.init_channels = x
         return nn.Sequential(*layers)
 
-    def set_T(self, T):
-        self.T = T
-        for module in self.modules():
-            if isinstance(module, IF):
-                module.T = T
-        return
-
-    def set_L(self, L):
-        for module in self.modules():
-            if isinstance(module, IF):
-                module.L = L
-        return
-
     def forward(self, x):
         if self.T > 0:
+            bs = x.shape[0]
             x.unsqueeze_(1)
             x = x.repeat(self.T, 1, 1, 1, 1)
             x = x.flatten(0, 1).contiguous()
@@ -114,9 +103,8 @@ class VGG(Module):
         x = self.layer5(x)
         x = self.classifier(x)
         if self.T > 0:
-            y_shape = [self.T, int(x.shape[0]/self.T)]
-            y_shape.extend(x.shape[1:])
-            x = x.view(y_shape)
+            _, n_cls = x.shape
+            x = x.view((self.T, bs, n_cls))
         return x
 
 class VGG_woBN(nn.Module):
@@ -163,14 +151,14 @@ class VGG_woBN(nn.Module):
             elif isinstance(m, nn.Linear):
                 nn.init.zeros_(m.bias)
 
-    def _make_layers(self, cfg, dropout):
+    def _make_layers(self, cfg, dropout, T, L):
         layers = []
         for x in cfg:
             if x == 'M':
                 layers.append(nn.MaxPool2d(kernel_size=2, stride=2))
             else:
                 layers.append(nn.Conv2d(self.init_channels, x, kernel_size=3, padding=1))
-                layers.append(IF())
+                layers.append(IF(T, L))
                 layers.append(nn.Dropout(dropout))
                 self.init_channels = x
         return nn.Sequential(*layers)
@@ -202,8 +190,8 @@ class VGG_woBN(nn.Module):
             out = self.expand(out)
         return out
 
-def vgg16(n_classes, dropout=0.):
-    return VGG('VGG16', n_classes, dropout)
+def vgg16(n_classes, T, L):
+    return VGG('VGG16', n_classes, T, L)
 
 def vgg16_wobn(n_classes, dropout=0.1):
     return VGG_woBN('VGG16', n_classes, dropout)
