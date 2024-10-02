@@ -35,11 +35,10 @@ cfg = {
     ]
 }
 
-
 class VGG(Module):
     def __init__(self, vgg_name, n_classes, T, L):
         super(VGG, self).__init__()
-        self.init_channels = 3
+        self.n_in = 3
         self.T = T
         self.layer1 = self._make_layers(cfg[vgg_name][0], T, L)
         self.layer2 = self._make_layers(cfg[vgg_name][1], T, L)
@@ -83,34 +82,36 @@ class VGG(Module):
             if x == 'M':
                 layers.append(AvgPool2d(kernel_size=2, stride=2))
             else:
-                layers.append(Conv2d(self.init_channels, x, kernel_size=3, padding=1))
+                layers.append(
+                    Conv2d(self.n_in, x, kernel_size=3, padding=1)
+                )
                 layers.append(BatchNorm2d(x))
                 layers.append(IF(T, L))
                 layers.append(Dropout(0.0))
-                self.init_channels = x
-        return nn.Sequential(*layers)
+                self.n_in = x
+        return Sequential(*layers)
 
-    def forward(self, x):
-        if self.T > 0:
-            bs = x.shape[0]
-            x.unsqueeze_(1)
-            x = x.repeat(self.T, 1, 1, 1, 1)
-            x = x.flatten(0, 1).contiguous()
+    def forward_once(self, x):
         x = self.layer1(x)
         x = self.layer2(x)
         x = self.layer3(x)
         x = self.layer4(x)
         x = self.layer5(x)
-        x = self.classifier(x)
+        return self.classifier(x)
+
+    def forward(self, x):
         if self.T > 0:
-            _, n_cls = x.shape
-            x = x.view((self.T, bs, n_cls))
-        return x
+            for m in self.modules():
+                if isinstance(m, IF):
+                    m.mem = None
+            y = [self.forward_once(x) for _ in range(self.T)]
+            return torch.stack(y)
+        return self.forward_once(x)
 
 class VGG_woBN(nn.Module):
     def __init__(self, vgg_name, n_classes, dropout):
         super(VGG_woBN, self).__init__()
-        self.init_channels = 3
+        self.n_in = 3
         self.T = 0
         self.merge = MergeTemporalDim(0)
         self.expand = ExpandTemporalDim(0)
@@ -157,24 +158,11 @@ class VGG_woBN(nn.Module):
             if x == 'M':
                 layers.append(nn.MaxPool2d(kernel_size=2, stride=2))
             else:
-                layers.append(nn.Conv2d(self.init_channels, x, kernel_size=3, padding=1))
+                layers.append(nn.Conv2d(self.n_in, x, kernel_size=3, padding=1))
                 layers.append(IF(T, L))
                 layers.append(nn.Dropout(dropout))
-                self.init_channels = x
+                self.n_in = x
         return nn.Sequential(*layers)
-
-    def set_T(self, T):
-        self.T = T
-        for module in self.modules():
-            if isinstance(module, (IF, ExpandTemporalDim)):
-                module.T = T
-        return
-
-    def set_L(self, L):
-        for module in self.modules():
-            if isinstance(module, IF):
-                module.L = L
-        return
 
     def forward(self, x):
         if self.T > 0:
