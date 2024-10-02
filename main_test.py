@@ -27,8 +27,8 @@ def main():
         default='cifar100',type=str,help='dataset'
     )
     parser.add_argument(
-        '-arch','--model',default='vgg16',
-        type=str,help='network'
+        '--net', default = 'vgg16',
+        type=str, help = 'network'
     )
     parser.add_argument(
         '-dev','--device',default='0',type=str,help='device'
@@ -44,7 +44,7 @@ def main():
 
     _, l_te = datapool(args.dataset, args.batch_size)
 
-    net = modelpool(args.model, args.dataset, args.time, 8)
+    net = modelpool(args.net, args.dataset, args.time, 8)
     state_dict = torch.load(
         args.weights_file,
         weights_only = True,

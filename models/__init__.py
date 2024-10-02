@@ -14,7 +14,7 @@ def modelpool(MODELNAME, DATANAME, T, L):
     elif MODELNAME.lower() == 'vgg16_wobn':
         return vgg16_wobn(n_classes=n_classes)
     elif MODELNAME.lower() == 'resnet18':
-        return resnet18(n_classes)
+        return resnet18(n_classes, T, L)
     elif MODELNAME.lower() == 'resnet34':
         return resnet34(n_classes=n_classes)
     elif MODELNAME.lower() == 'resnet20':

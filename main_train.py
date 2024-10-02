@@ -4,7 +4,7 @@ from os import environ
 from preprocess import datapool
 from torch.optim import SGD
 from torch.optim.lr_scheduler import CosineAnnealingLR
-from utils import train, val, seed_all
+from utils import train, seed_all
 
 import torch
 
@@ -41,7 +41,7 @@ def main():
         help='dataset'
     )
     parser.add_argument(
-        '-arch','--net',
+        '--net',
         default='vgg16',type=str,
         help='net'
     )
@@ -49,7 +49,7 @@ def main():
     parser.add_argument(
         '--epochs',
         default=300,type=int,metavar='N',
-        help='number of total epochs to run'
+        help='number of epochs'
     )
     # 0.05 for cifar100 / 0.1 for cifar10
     parser.add_argument(
