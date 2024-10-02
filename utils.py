@@ -69,27 +69,3 @@ def train(net, device, loader, opt, epoch, n_epochs):
 
         print('%4d/%4d, loss/acc: %.4f/%.2f' % (i, n_batches, loss, acc))
     return tot_loss / n_batches, n_tot_corr / n_tot_el
-
-
-def val(net, loader, device, T):
-    correct = 0
-    total = 0
-    net.eval()
-    with torch.no_grad():
-        n = len(loader)
-        for i, (x, y) in enumerate(loader):
-            x = x.to(device)
-            if T > 0:
-                yh = net(x).mean(0)
-            else:
-                yh = net(x)
-            _, predicted = yh.cpu().max(1)
-
-            n_batch = y.size(0)
-            n_corr = predicted.eq(y).sum().item()
-
-            total += n_batch
-            correct += n_corr
-            print("%4d/%4d acc %5.3f" % (i, n, n_corr / n_batch))
-        final_acc = 100 * correct / total
-    return final_acc
