@@ -81,7 +81,7 @@ def main():
     # preparing data
     l_tr, l_te = datapool(args.dataset, args.batch_size)
     # preparing net
-    net = modelpool(args.net, args.dataset)
+    net = modelpool(args.net, args.dataset, 0, args.L)
     net.set_L(args.L)
 
     net.to(dev)
@@ -95,10 +95,7 @@ def main():
     scheduler = CosineAnnealingLR(opt, T_max=args.epochs)
     best_acc = 0
 
-    identifier = args.net
-
-    identifier += '_L[%d]'%(args.L)
-
+    identifier = args.net + ('_L[%d]' % args.L)
     if not args.suffix == '':
         identifier += '_%s'%(args.suffix)
 
