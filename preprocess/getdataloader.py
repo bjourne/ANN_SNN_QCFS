@@ -44,7 +44,7 @@ def GetCifar100(batch_size):
         DATA_DIR, train=True,
         transform=trans_t, download=True
     )
-    test_data = CIFAR100(
+    d_te = CIFAR100(
         DATA_DIR, train=False,
         transform=trans, download=True
     )
@@ -54,7 +54,7 @@ def GetCifar100(batch_size):
         pin_memory=True
     )
     l_te = DataLoader(
-        test_data, batch_size=batch_size,
+        d_te, batch_size=batch_size,
         shuffle=False,
         drop_last = True
     )
@@ -84,7 +84,7 @@ def GetImageNet(batch_size):
         sampler=train_sampler, pin_memory=True
     )
 
-    test_data = ImageFolder(root=DATA_DIR / 'val', transform=trans)
-    test_sampler = DistributedSampler(test_data)
-    l_te = DataLoader(test_data, batch_size=batch_size, shuffle=False, num_workers=2, sampler=test_sampler)
+    d_te = ImageFolder(root=DATA_DIR / 'val', transform=trans)
+    test_sampler = DistributedSampler(d_te)
+    l_te = DataLoader(d_te, batch_size=batch_size, shuffle=False, num_workers=2, sampler=test_sampler)
     return l_tr, l_te
