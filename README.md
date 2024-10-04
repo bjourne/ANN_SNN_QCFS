@@ -1,1 +1,8 @@
-My experiments.
+This repo facilitates my attempts at replicating "Optimal ANN-SNN
+conversion for high-accuracy and ultra-low-latency spiking neural
+networks".
+
+| SRC    | ARCH  | DATASET  | L | ANN   | T=1   | T=2   | T=4   | T=8   | T=16  | T=32  | T=64  | T=128 |
+|--------|-------|----------|---|-------|-------|-------|-------|-------|-------|-------|-------|-------|
+| GDrive | VGG16 | CIFAR100 | 8 | 77.41 | 58.60 | 64.82 | 70.50 | 74.79 | 76.75 | 76.87 | 77.10 |       |
+| Mine   | VGG16 | CIFAR100 | 8 | 77.14 | 43.07 | 52.74 |       |       |       |       | 77.05 |       |
