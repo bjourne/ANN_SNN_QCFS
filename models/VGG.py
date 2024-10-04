@@ -80,7 +80,7 @@ class VGG(Module):
         layers = []
         for x in cfg:
             if x == 'M':
-                layers.append(AvgPool2d(kernel_size=2, stride=2))
+                layers.append(AvgPool2d(2, 2))
             else:
                 layers.append(
                     Conv2d(self.n_in, x, kernel_size=3, padding=1)

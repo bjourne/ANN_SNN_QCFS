@@ -26,10 +26,6 @@ def main():
         help='seed for initializing training'
     )
     parser.add_argument(
-        '-suffix','--suffix', default='',
-        type=str,help='suffix'
-    )
-    parser.add_argument(
         '-T', '--time', default=0, type=int,
         help='snn simulation time'
     )
@@ -96,9 +92,6 @@ def main():
     best_acc = 0
 
     identifier = args.net + ('_L[%d]' % args.L)
-    if not args.suffix == '':
-        identifier += '_%s'%(args.suffix)
-
     n_epochs = args.epochs
     for epoch in range(n_epochs):
 
