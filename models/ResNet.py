@@ -69,12 +69,7 @@ class ResNet(Module):
         self.avg_pool = AdaptiveAvgPool2d((1, 1))
         self.fc = Linear(512, n_classes)
 
-    def forward(self, x):
-        if self.T > 0:
-            bs = x.shape[0]
-            x.unsqueeze_(1)
-            x = x.repeat(self.T, 1, 1, 1, 1)
-            x = x.flatten(0, 1).contiguous()
+    def forward_once(self, x):
         x = self.conv1(x)
         x = self.conv2_x(x)
         x = self.conv3_x(x)
@@ -82,11 +77,16 @@ class ResNet(Module):
         x = self.conv5_x(x)
         x = self.avg_pool(x)
         x = x.view(x.size(0), -1)
-        x = self.fc(x)
+        return self.fc(x)
+
+    def forward(self, x):
         if self.T > 0:
-            _, n_cls = x.shape
-            x = x.view((self.T, bs, n_cls))
-        return x
+            for m in self.modules():
+                if isinstance(m, IF):
+                    m.mem = None
+            y = [self.forward_once(x) for _ in range(self.T)]
+            return torch.stack(y)
+        return self.forward_once(x)
 
 class ResNet4Cifar(nn.Module):
     def __init__(self, num_block, n_classes=10):
@@ -115,35 +115,29 @@ class ResNet4Cifar(nn.Module):
             self.in_channels = n_out
         return nn.Sequential(*layers)
 
-    def set_T(self, T):
-        self.T = T
-        for module in self.modules():
-            if isinstance(module, (IF, ExpandTemporalDim)):
-                module.T = T
-            if isinstance(module, IF):
-                print(module.thresh)
-        return
-
     def set_L(self, L):
         for module in self.modules():
             if isinstance(module, IF):
                 module.L = L
         return
 
+    def forward_once(self, x):
+        x = self.conv1(x)
+        x = self.conv2_x(x)
+        x = self.conv3_x(x)
+        x = self.conv4_x(x)
+        x = self.avg_pool(x)
+        x = x.view(x.size(0), -1)
+        return self.fc(x)
+
     def forward(self, x):
         if self.T > 0:
-            x = add_dimention(x, self.T)
-            x = self.merge(x)
-        output = self.conv1(x)
-        output = self.conv2_x(output)
-        output = self.conv3_x(output)
-        output = self.conv4_x(output)
-        output = self.avg_pool(output)
-        output = output.view(output.size(0), -1)
-        output = self.fc(output)
-        if self.T > 0:
-            output = self.expand(output)
-        return output
+            for m in self.modules():
+                if isinstance(m, IF):
+                    m.mem = None
+            y = [self.forward_once(x) for _ in range(self.T)]
+            return torch.stack(y)
+        return self.forward_once(x)
 
 def resnet18(n_classes, T, L):
     return ResNet([2, 2, 2, 2], n_classes, T, L)
