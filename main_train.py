@@ -74,11 +74,8 @@ def main():
 
     print('batch size', args.batch_size)
 
-    # preparing data
     l_tr, l_te = datapool(args.dataset, args.batch_size)
-    # preparing net
     net = modelpool(args.net, args.dataset, 0, args.L)
-    net.set_L(args.L)
 
     net.to(dev)
 
@@ -91,7 +88,7 @@ def main():
     scheduler = CosineAnnealingLR(opt, T_max=args.epochs)
     best_acc = 0
 
-    identifier = args.net + ('_L[%d]' % args.L)
+    fname = '%s_L[%d].pth' % (args.net, args.L)
     n_epochs = args.epochs
     for epoch in range(n_epochs):
 
@@ -107,6 +104,6 @@ def main():
 
         if best_acc < te_acc:
             best_acc = te_acc
-            torch.save(net.state_dict(), '%s.pth' % identifier)
+            torch.save(net.state_dict(), fname)
 
 main()

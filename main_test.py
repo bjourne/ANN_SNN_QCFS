@@ -3,6 +3,7 @@ from models import modelpool
 from os import environ
 from pathlib import Path
 from preprocess import datapool
+from torchinfo import summary
 from utils import train, seed_all
 
 import torch
@@ -39,6 +40,8 @@ def main():
     _, l_te = datapool(args.dataset, args.batch_size)
 
     net = modelpool(args.net, args.dataset, args.time, 8)
+    summary(net)
+
     state_dict = torch.load(
         args.weights_file,
         weights_only = True,
