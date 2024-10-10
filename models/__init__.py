@@ -18,5 +18,5 @@ def modelpool(MODELNAME, DATANAME, T, L):
     elif MODELNAME.lower() == 'resnet34':
         return resnet34(n_classes=n_classes)
     elif MODELNAME.lower() == 'resnet20':
-        return resnet20(n_classes=n_classes)
+        return ResNet4Cifar([3, 3, 3], n_classes, T, L)
     assert False
