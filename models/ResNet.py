@@ -119,8 +119,5 @@ class ResNet4Cifar(Module):
             return torch.stack(y)
         return self.forward_once(x)
 
-def resnet18(n_classes, T, L):
-    return ResNet([2, 2, 2, 2], n_classes, T, L)
-
-def resnet34(n_classes=10):
-    return ResNet([3, 4, 6, 3], n_classes=n_classes)
+def resnet18(n_cls, T, L):
+    return ResNet([2, 2, 2, 2], n_cls, T, L)
